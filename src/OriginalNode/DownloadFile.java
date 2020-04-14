@@ -25,7 +25,7 @@ public class DownloadFile extends Thread {
     int port;
     String filename;
 
-    public DownloadFile(String host, int port, String filename) {
+     public DownloadFile(String host, int port, String filename) {
         this.host = host;
         this.port = port;
         this.filename = filename;
@@ -36,6 +36,9 @@ public class DownloadFile extends Thread {
         try {
             Socket s = new Socket(host, port);
             InputStream is = s.getInputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(s.getOutputStream());
+            
+            oos.writeChars("GET DATA");
 
             BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(filename)));
             String line = "";
@@ -47,6 +50,5 @@ public class DownloadFile extends Thread {
         } catch (IOException ex) {
             Logger.getLogger(DownloadFile.class.getName()).log(Level.SEVERE, null, ex);
         }
-
     }
 }
