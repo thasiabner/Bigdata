@@ -6,12 +6,14 @@
 package OriginalNode;
 
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -23,6 +25,13 @@ import java.util.logging.Logger;
 public class Split extends Thread {
 
     String bigFileName;
+    static String hosts[] = {"localhost", "localhost"};
+    static int ports[] = {8081, 8082};
+    static int nbHosts = hosts.length;
+    static int nbChar;
+//    static int nbActiveHosts;
+//    static String activeHosts[];
+//    static int activePorts[];
 
     public Split(String bigFileName) {
         this.bigFileName = bigFileName;
@@ -30,7 +39,53 @@ public class Split extends Thread {
 
     public void run() {
         String[] bigFileContent = getBigFileContent();
-
+        if (bigFileContent.length == 0)
+        	return;
+        
+//        try {
+//        	nbActiveHosts = 0;
+//			for (int i = 0; i < hosts.length; i++) {
+//            	Socket socket = new Socket(hosts[i], ports[i]);
+//            	activeHosts[nbActiveHosts] = hosts[nbActiveHosts];
+//            	activePorts[nbActiveHosts] = ports[nbActiveHosts];
+//            	nbActiveHosts++;
+//            	socket.close();
+//			}
+//		} catch (Exception e) {
+//			
+//		}
+        
+        int nbCharEachBlock = (int)Math.ceil((double)nbChar / nbHosts);
+        int start = 0;
+    	try {
+            for (int i = 0; i < nbHosts; ++i) {
+            	Socket socket = new Socket(hosts[i], ports[i]);
+            	DataOutputStream dout = new DataOutputStream(socket.getOutputStream());
+            	ObjectOutputStream oos = new ObjectOutputStream(dout);
+                Vector<String> block = new Vector<String>();
+                int nbRealChar = 0;
+                for (int j = start; j < bigFileContent.length; j++) {
+					if (nbRealChar >= nbCharEachBlock)
+					{
+						block.add(0, "POST\n");
+						oos.writeObject(block);
+						oos.flush();
+						oos.close();
+						dout.close();
+						socket.close();
+						start = j;
+						break;
+					}
+					else
+					{
+						block.add(bigFileContent[j]);
+						nbRealChar += bigFileContent[j].length();
+					}
+				}
+            }
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
     }
 
     private String[] getBigFileContent() {
@@ -42,6 +97,7 @@ public class Split extends Thread {
             String line;
             while ((line = br.readLine()) != null) {
                 block.add(line);
+                nbChar += line.length();
             }
 
         } catch (FileNotFoundException ex) {
