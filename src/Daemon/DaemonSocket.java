@@ -48,7 +48,7 @@ public class DaemonSocket extends Thread {
                 in.close();
             } else {
                 System.out.println("Sending file to original node");
-                File downloadFile = new File("Daemon/map" + this.port + ".txt");
+                File downloadFile = new File("Daemon/file" + this.port + ".txt");
                 final BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(downloadFile)));
                 final PrintWriter out = new PrintWriter(this.clientSocket.getOutputStream(), true);
                 String line;
